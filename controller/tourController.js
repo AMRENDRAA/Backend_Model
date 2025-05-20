@@ -1,6 +1,7 @@
 const { query } = require('express');
 const Tour=require('./../model/tourModel')
 const fs= require('fs');
+const catchAsync=require('./../utils/catchAsync')
 
 
 
@@ -14,20 +15,20 @@ exports.getalltour= async(req,res)=>{
 
     try {
         //build query
-        const queryObj={...req.query};
+        // const queryObj={...req.query};
       
-        // queryObj.price.gt=parseInt(queryObj.price.gt);
-        console.log('we are here 1',queryObj);
-        const excludedfields=['page','sort','limit','fields'];
-        excludedfields.forEach(el=> delete queryObj[el]);
-        console.log(req.query,queryObj);
+        // // queryObj.price.gt=parseInt(queryObj.price.gt);
+        // console.log('we are here 1',queryObj);
+        // const excludedfields=['page','sort','limit','fields'];
+        // excludedfields.forEach(el=> delete queryObj[el]);
+        // console.log(req.query,queryObj);
 
-        let queryStr=JSON.stringify(queryObj);
+        // let queryStr=JSON.stringify(queryObj);
 
-         queryStr=queryStr.replace(/\b(gte|gt|lte|lt)\b/g,match=>`$${match}`);
-        console.log(queryStr);
+        //  queryStr=queryStr.replace(/\b(gte|gt|lte|lt)\b/g,match=>`$${match}`);
+        // console.log(queryStr);
 
-        console.log('we are here2 ',JSON.parse(queryStr));
+        // console.log('we are here2 ',JSON.parse(queryStr));
 
 
 
@@ -46,14 +47,14 @@ exports.getalltour= async(req,res)=>{
         // }
 
 
-        if (req.query.fields) {
-            console.log('we are here in fields ');
-            const fields = req.query.fields.split(',').join(' '); // Fix: Space instead of empty string
-            query = query.select(fields);
-        } else {
-            console.log('we are here 2');
-            query = query.select('-__v'); // Fix: Probably meant to exclude `__v`
-        }
+        // if (req.query.fields) {
+        //     console.log('we are here in fields ');
+        //     const fields = req.query.fields.split(',').join(' '); // Fix: Space instead of empty string
+        //     query = query.select(fields);
+        // } else {
+        //     console.log('we are here 2');
+        //     query = query.select('-__v'); // Fix: Probably meant to exclude `__v`
+        // }
         
 
 
@@ -61,11 +62,15 @@ exports.getalltour= async(req,res)=>{
        
         //Executing query 
 
-        const tours =await query;
+        const tour= await Tour.find();
         res.status(200).json({
             status: "success",
+            tourlength:tour.length,
             requestedAt: req.requestTime,
-            data: { tours }
+            data: {
+                tour
+            }
+
         });
     } catch (err) {
         res.status(404).json({
@@ -78,53 +83,41 @@ exports.getalltour= async(req,res)=>{
 }
 
 
-exports.gettour=async(req,res)=>{
+exports.gettour = catchAsync(async (req, res, next) => {
+    const tour = await Tour.findById(req.params.id);
+    if (!tour) {
+      return res.status(404).json({
+        status: "fail",
+        message: "No tour found with that ID"
+      });
+    }
+    res.status(200).json({
+      status: "success",
+      data: { tour }
+    });
+  });
+  
+  
 
-    try{
-        const tour=await Tour.findById(req.params.id);
-        res.status(200).json({
+  
+
+
+    exports.createTour= catchAsync( async(req,res,next)=>{
+
+        const newTour=await Tour.create(req.body)
+
+        res.status(201).json({
+        
             status:"success",
             data:{
-                tour
+                tour: newTour
             }
         })
 
-    }catch(err){
-        res.status(404).json({
-            status: "Failed",
-            message: err.message
 
-    })
-}
-}
-
-    
-
-
-    exports.createTour=async(req,res)=>{
-
-        try{
-            const newTour=await Tour.create(req.body)
-
-            res.status(201).json({
-            
-                status:"success",
-                data:{
-                    tour: newTour
-                }
-            });
-
-            
-        }catch(err){
-            console.log(err);
-            res.status(400).json({
-                status:'fail',
-                message:err.message
-            })
-        }
   
-
-};
+    
+});
 
 
 
@@ -164,3 +157,21 @@ exports.getalluser=(res,req)=>{
     })
 
 }
+
+exports.deletetour = async(req, res) => {
+    // your delete logic here
+    const tour = await Tour.findByIdAndDelete(req.params.id);
+    if(!tour){
+        return res.status(404).json({
+            status:"failed",
+            message:"no tour found "
+        })
+    }
+
+
+    
+    res.status(204).json({
+      status: 'success',
+      data: null
+    });
+  };

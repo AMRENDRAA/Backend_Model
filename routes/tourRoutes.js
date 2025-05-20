@@ -1,6 +1,7 @@
 const express=require('express');
 const fs=require('fs');
 const tourController=require('./../controller/tourController');
+const authController=require('./../controller/authController')
 const router=express.Router();
 
 
@@ -8,7 +9,7 @@ const router=express.Router();
 
 // tourRouter.get('/',tourController.getalltour);
 
-router.route('/').get(tourController.getalltour).post(tourController.checkbody,tourController.createTour);
+router.route('/').get(authController.protect,tourController.getalltour).post(tourController.checkbody,tourController.createTour);
+router.route('/:id').get(tourController.gettour).patch(tourController.updatecreatetour).delete(authController.protect,authController.restrictTo(['admin']),tourController.deletetour);
+module.exports=router;
 
-router.route('/:id').get(tourController.gettour).patch(tourController.updatecreatetour);
- module.exports=router;
