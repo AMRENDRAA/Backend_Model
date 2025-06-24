@@ -46,6 +46,12 @@ const userSchema = new moongoose.Schema({
   passwordchangedAt: Date,
   passwordResetToken: String,
   passwordResetExpires: Date,
+
+  active: {
+    type: Boolean,
+    default: true,
+    select: false,
+  },
 });
 userSchema.pre('save', async function (next) {
   //only run this function if password was actually modified

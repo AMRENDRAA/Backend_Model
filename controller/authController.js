@@ -204,7 +204,7 @@ exports.updateMyPassword = catchAsync(async (req, res, next) => {
   //2 check if posted password is correct
 
   if (!user.correctPassword(req.body.passwordCurrent, user.password)) {
-    return next(new ApprError('your current password is wrong', 401));
+    return next(new AppError('your current password is wrong', 401));
   }
 
   //3>if so update password
@@ -215,4 +215,12 @@ exports.updateMyPassword = catchAsync(async (req, res, next) => {
   //4 log user in send jwt
 
   createsendtoken(user, 200, res);
+});
+exports.deleteMe = catchAsync(async (req, res, next) => {
+  await User.findByIdAndUpdate(req.user.id, { active: false });
+
+  res.status(204).json({
+    status: 'success',
+    data: null,
+  });
 });
